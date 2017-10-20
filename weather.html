@@ -1,0 +1,197 @@
+<html>
+  <head>
+
+  <!-- 
+  
+  NOTE: This plugin will not be visible on public views of a channel. 
+        If you intend to make your channel public, consider using the
+        MATLAB Visualization App to create your visualizations.
+  
+  -->  
+  
+  <title>home weather</title>
+  <!-- 
+  %%PLUGIN_CSS%%
+-->
+<style type="text/css">
+  body { background-color: #ddd; }
+  #container { height: 100%; width: 100%; display: table; }
+  #inner { vertical-align: middle; display: table-cell; }
+  #humm_div{ margin: left auto; }
+ #temper_div,#temper_ext_div,#humm_ext_div,#press_ext_div,#temper_balcon_div{ 
+  	display: inline-block;
+  	margin: 0 auto;
+ }
+        
+</style>
+
+
+ <!-- 
+  %%PLUGIN_JAVASCRIPT%%
+-->
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+<script type='text/javascript' src='https://www.google.com/jsapi'></script>
+<script type='text/javascript'>
+
+  // set your channel id here
+  var weatherl_id = 254141;  
+  var weather_key = '5ZF2L5L6TU079BB0';
+  
+  var inHouse_id = 265846;  
+  var inHouse_key = 'OUL94JOTKEXHAN33';
+  
+  var single_gauge_size=160; 
+
+  // global variables
+  var dataTemper,dataHumm;
+  
+  var dataExtTemper,dataExtHumm,dataExtPress ;
+  var dataBalcTemper ;
+  
+  var optionsTemper,optionsHumm,optionsExtTemper,optionsExtHumm,optionsExtPress;
+  
+  //chart
+  var chart_temper,chart_humm;  
+  var chart_temper_balcon;
+  var chart_temper_ext,chart_humm_ext,chart_press_ext;
+
+  // load the google gauge visualization
+  google.load('visualization', '1', {packages:['gauge']});
+  google.setOnLoadCallback(initChart);
+
+  // display the data  
+  function displayDataInternal(data) {
+	 if(data){
+	 		if(data.field1)
+	 			dataTemper.setValue(0, 1, data.field1);
+	 		if(data.field2)
+	 			dataHumm.setValue(0, 1, data.field2);
+	 		if(data.field3)
+	 			dataTemper.setValue(1, 1, data.field3);
+	 		if(data.field4)
+	 			dataHumm.setValue(1, 1, data.field4);
+	 	}
+    chart_temper.draw(dataTemper, optionsTemper);    
+    chart_humm.draw(dataHumm, optionsHumm);    
+    }
+
+  function displayDataExternal(data) {	    
+	 if(data){
+	 		if(data.field1)
+	 			dataBalcTemper.setValue(0, 1, data.field1);
+	 		if(data.field2)
+	 			dataExtPress.setValue(0, 1, data.field2);
+	 		if(data.field3)
+	 			dataExtTemper.setValue(0, 1, data.field3);
+	 		if(data.field4)
+	 			dataExtHumm.setValue(0, 1, data.field4);
+	 	}
+	  chart_temper_balcon.draw(dataBalcTemper, optionsExtTemper);
+	  chart_temper_ext.draw(dataExtTemper, optionsExtTemper);
+	  chart_humm_ext.draw(dataExtHumm, optionsExtHumm);
+	  chart_press_ext.draw(dataExtPress, optionsExtPress);
+	}
+  // load the data
+  function loadData() {    
+    // get the data from thingspeak
+    $.getJSON('https://api.thingspeak.com/channels/' + inHouse_id + '/feed/last.json?api_key=' + inHouse_key, function(data) {    	
+    	displayDataInternal(data);      
+    });
+    $.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/feed/last.json?api_key=' + weather_key, function(data) {
+    	displayDataExternal(data);      
+    });
+  }
+
+  // initialize the chart
+  function initData(){
+	  for(var field=1;field<=4;field++){
+		  $.getJSON('https://api.thingspeak.com/channels/' + inHouse_id + '/fields/' +field+ '/last.json?api_key=' + inHouse_key, function(data) {    	
+		    	displayDataInternal(data);      
+		   });
+	  }
+	  for(var field=1;field<=4;field++){
+		  $.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/' +field+ '/last.json?api_key=' + weather_key, function(data) {    	
+			  displayDataExternal(data);      
+		   });
+	  }
+  }
+  
+  function initChart() {
+
+        dataTemper = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['parent', 0],
+          ['children', 0]         
+        ]);        
+        dataHumm = google.visualization.arrayToDataTable([
+            ['Label', 'Value'],
+            ['parent', 0],
+            ['children', 0]         
+          ]);
+
+     dataBalcTemper = google.visualization.arrayToDataTable([
+         ['Label', 'Value'],
+         ['Balc', 0],
+       ]);
+    dataExtTemper = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Ext', 0],
+      ]);
+    
+    dataExtHumm= google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Hummt', 0],
+      ]);
+    dataExtPress= google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Press', 0],
+      ]);
+    
+    chart_temper = new google.visualization.Gauge(document.getElementById('temper_div'));
+    chart_humm = new google.visualization.Gauge(document.getElementById('humm_div'));
+
+    optionsTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:35,greenFrom:20,greenTo:25, minorTicks: 5};
+    optionsHumm = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:100,greenFrom:20,greenTo:25, minorTicks: 5};
+    
+    optionsExtTemper = {width: single_gauge_size, height: single_gauge_size,min:-40, max:40, minorTicks: 5};
+    optionsExtHumm=Object.assign({}, optionsHumm);
+    optionsExtHumm.width=single_gauge_size;
+    optionsExtPress = {width: single_gauge_size, height: single_gauge_size,min:740, max:800};
+    
+    chart_temper_balcon = new google.visualization.Gauge(document.getElementById('temper_balcon_div'));
+    
+    chart_temper_ext = new google.visualization.Gauge(document.getElementById('temper_ext_div'));
+    chart_humm_ext = new google.visualization.Gauge(document.getElementById('humm_ext_div'));
+    chart_press_ext = new google.visualization.Gauge(document.getElementById('press_ext_div'));
+    
+    initData()
+    
+    displayDataInternal();
+    displayDataExternal();
+    loadData();
+        
+    setInterval('loadData()', 60000);
+  }
+
+</script>
+
+  </head>
+
+  <body>
+    <div id="container">       
+     rooms temerature</br>
+	 <div id="temper_div"></div>
+	 <div id="temper_balcon_div"></div>
+	 </br>rooms humm
+     <div id="humm_div"></div>     
+     
+     extern</br>
+     <div id="temper_ext_div"></div>
+     <div id="humm_ext_div"></div>
+     <div id="press_ext_div"></div>       
+    </div>
+  </body>
+</html>
+
+
+
