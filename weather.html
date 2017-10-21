@@ -152,8 +152,8 @@
     chart_temper = new google.visualization.Gauge(document.getElementById('temper_div'));
     chart_humm = new google.visualization.Gauge(document.getElementById('humm_div'));
 
-    optionsTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:35,greenFrom:20,greenTo:25, minorTicks: 5};
-    optionsHumm = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:100,greenFrom:20,greenTo:25, minorTicks: 5};
+    optionsTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:35,greenFrom:17,greenTo:23, minorTicks: 5};
+    optionsHumm = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:100,greenFrom:40,greenTo:60, minorTicks: 5};
     
     optionsExtTemper = {width: single_gauge_size, height: single_gauge_size,min:-40, max:40, minorTicks: 5};
     optionsExtHumm=Object.assign({}, optionsHumm);
@@ -178,7 +178,8 @@
 
 // CHARts
   var dataToday;
- var chartToday
+  var chartToday;
+	var fromDate;
       google.charts.load('current', {'packages':['corechart']});
       google.charts.setOnLoadCallback(drawChart);
 
@@ -199,8 +200,14 @@
         chartToday = new google.visualization.LineChart(document.getElementById('today'));
 
         chartToday.draw(dataToday, options);
+	fromDate = new Date();
+	fromDate.setDate(fromDate.getDate() -1);
+	var mm = fromDate.getMonth() + 1; // getMonth() is zero-based
+  	var dd = fromDate.getDate();
 
-	$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=1&start=2017-10-19%2000:00:00'+'&api_key=' + weather_key, function(data) {
+	var fromDateStr=fromDate.getFullYear()+'-'+ (mm>9 ? '' : '0') + mm+'-'+ (dd>9 ? '' : '0') + dd;
+
+	$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDateStr+'%2000:00:00'+'&api_key=' + weather_key, function(data) {
 	  for(var i=0;i<24;i++){
 		dataToday.setValue(i, 1, data.feeds[i].field3)
 		if(data.feeds[i+24])
