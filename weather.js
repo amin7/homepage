@@ -167,11 +167,14 @@
           title: 'Today',
           curveType: 'function',
           legend: { position: 'top' },
-        vAxes: {
+          vAxes: {
             // Adds titles to each axis.
             0: {title: 'Temps (Celsius)'}
           },
-          colors: ['maroon', 'black'],
+          series: {
+        	  0:{lineDashStyle: [4, 2]}
+          },
+          colors: ['navy', 'navy'],
           chartArea: {
               backgroundColor: {
                 fill: '#FFFFFF',
@@ -300,6 +303,7 @@
           var classicOptions = {
             title: 'Min/Max Temperatures ['+fromDate.yyyymmdd()+'-> today]',
             colors: ['red', 'navy'],
+            legend: { position: 'top' },
             vAxes: {
               // Adds titles to each axis.
               0: {title: 'Temps (Celsius)'}	              
