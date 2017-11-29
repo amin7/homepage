@@ -327,7 +327,7 @@
 	    var classicChart = new google.visualization.LineChart(chartDiv);
 	    classicChart.draw(data, classicOptions);
 
-		$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + weather_key, function(reply) {
+		$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?timezone=Europe/Kiev&round=1&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + weather_key, function(reply) {
 	  		for(var i=0;i<=dayCount;i++){
 	  			var dayBeg=new Date(fromDate);
 	  			dayBeg.setDate(fromDate.getDate()+i);
