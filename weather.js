@@ -44,17 +44,19 @@
          ['children', 0]         
        ]);
      dataBalcTemper = google.visualization.arrayToDataTable([
-         ['Label', 'Value'],
+         ['Label', 'Value'],         
          ['Balc', 0],
        ]);
     dataExtTemper = google.visualization.arrayToDataTable([
         ['Label', 'Value'],
         ['Ext', 0],
+        ['dht', 0],
       ]);
     
     dataExtHumm= google.visualization.arrayToDataTable([
         ['Label', 'Value'],
         ['Ext', 0],
+        ['dht', 0],
       ]);
 
     
@@ -64,9 +66,9 @@
     optionsTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:35,greenFrom:17,greenTo:23, minorTicks: 5};
     optionsHumm = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:100,greenFrom:40,greenTo:60, minorTicks: 5};
     
-    optionsExtTemper = {width: single_gauge_size, height: single_gauge_size,min:-40, max:40, minorTicks: 5};
+    optionsExtTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:-40, max:40, minorTicks: 5};
     optionsExtHumm=Object.assign({}, optionsHumm);
-    optionsExtHumm.width=single_gauge_size;
+    //optionsExtHumm.width=single_gauge_size;
     
     
     chart_temper_balcon = new google.visualization.Gauge(document.getElementById('temper_balcon_div'));
@@ -82,7 +84,7 @@
                   displayDataInternal(data);      
              });
         }
-        for(var field=1;field<=4;field++){
+        for(var field=1;field<=6;field++){
             $.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/' +field+ '/last.json?api_key=' + weather_key, function(data) {     
                 displayDataExternal(data);      
              });
@@ -114,6 +116,10 @@
   	 			dataExtTemper.setValue(0, 1, data.field3);
   	 		if(data.field4)
   	 			dataExtHumm.setValue(0, 1, data.field4);
+  	 		if(data.field5)
+  	 			dataExtTemper.setValue(1, 1, data.field5);
+  	 		if(data.field6)
+  	 			dataExtHumm.setValue(1, 1, data.field6);
   	 	}
   	  chart_temper_balcon.draw(dataBalcTemper, optionsExtTemper);
   	  chart_temper_ext.draw(dataExtTemper, optionsExtTemper);
@@ -145,6 +151,7 @@
   function drawCharts(){
 	  drawToday(); 
 	  drawext_temper_press();
+	  drawext_temper_30days();
   } 
   // CHARts ------------------------------------------------------------
       function drawToday() {
@@ -164,6 +171,7 @@
             // Adds titles to each axis.
             0: {title: 'Temps (Celsius)'}
           },
+          colors: ['maroon', 'black'],
           chartArea: {
               backgroundColor: {
                 fill: '#FFFFFF',
@@ -267,4 +275,74 @@
 			});	
 		  classicChart.draw(data, classicOptions);
 		});
-        }
+      }
+		
+
+   // CHARts ext_temper_30days------------------------------------------------------------
+ 
+      function drawext_temper_30days() {
+	     var dayCount=30;
+	     fromDate = new Date();
+    	 fromDate.setDate(fromDate.getDate() -dayCount);
+    	 fromDate.setHours(0);
+    	 fromDate.setMinutes(0);
+    	 fromDate.setSeconds(0);
+    	 fromDate.setMilliseconds(0);
+          var chartDiv = document.getElementById('ext_temper_30days');
+
+          var data = new google.visualization.DataTable();
+          data.addColumn('date', 'Month');
+          data.addColumn('number', "Max");
+          data.addColumn({type: 'string', role: 'annotation'});
+          data.addColumn('number', "Min");	 
+          data.addColumn({type: 'string', role: 'annotation'});
+               
+          var classicOptions = {
+            title: 'Min/Max Temperatures ['+fromDate.yyyymmdd()+'-> today]',
+            colors: ['red', 'navy'],
+            vAxes: {
+              // Adds titles to each axis.
+              0: {title: 'Temps (Celsius)'}	              
+            },            
+            chartArea: {
+                backgroundColor: {
+                  fill: '#FFFFFF',                  
+                },
+              },            
+            backgroundColor: {
+                fill: '#ddd',                
+            }
+              
+          };
+    	
+  		for(var i=0;i<=dayCount;i++){
+  			var day=new Date(fromDate);
+  			day.setDate(fromDate.getDate()+i);
+  			data.addRow([day,null,null,null,null]);
+		}
+	    var classicChart = new google.visualization.LineChart(chartDiv);
+	    classicChart.draw(data, classicOptions);
+
+		$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + weather_key, function(reply) {
+	  		for(var i=0;i<=dayCount;i++){
+	  			var dayBeg=new Date(fromDate);
+	  			dayBeg.setDate(fromDate.getDate()+i);
+	  			var dayEnd=new Date(dayBeg);
+	  			dayEnd.setDate(dayEnd.getDate()+1);
+	  			
+	  			function checkday(element) {
+	  				var recordDate=new Date(element.created_at);
+	  				if(recordDate>=dayBeg && recordDate<dayEnd)return true
+	  				return false;
+	  				}	  			
+	  			var dataDay=reply.feeds.filter(checkday).sort(function(a, b){return b.field3 - a.field3});
+	  			if(dataDay.length){//if present any elements
+	  				data.setValue(i,1,dataDay[0].field3);
+	  				data.setValue(i,2,dataDay[0].field3);
+	  			    data.setValue(i,3,dataDay[dataDay.length-1].field3);
+	  			    data.setValue(i,4,dataDay[dataDay.length-1].field3);	  			  
+	  			}
+	  			}
+		  classicChart.draw(data, classicOptions);
+		});		
+    }
