@@ -15,6 +15,14 @@
 	          '-',(dd>9 ? '' : '0') + dd
 	         ].join('');
 	};
+  Date.prototype.hhmm = function() {	  	  
+	  var hh = this.getHours() ; // getMonth() is zero-based
+	  var mm = this.getMinutes();
+
+	  return [hh,':',
+	          ,(mm>9 ? '' : '0') + mm
+	         ].join('');
+	};	
   //--------------------------------------------
   // load the google gauge visualization
   google.charts.load('current', {'packages':['gauge']});
@@ -77,6 +85,26 @@
     chart_humm_ext = new google.visualization.Gauge(document.getElementById('humm_ext_div'));    
     
     
+    var table = document.getElementById("temper_update_table");
+    var row = table.insertRow();
+    for(var n=0;n!=5;n++){
+    	var cell = row.insertCell();    
+    	cell.innerHTML = "wait...";
+    	cell.style.width = single_gauge_size+'px';
+    	cell.style.textAlign="right";
+    }
+
+    var table = document.getElementById("humm_update_table");
+    var row = table.insertRow();
+    for(var n=0;n!=4;n++){
+    	var cell = row.insertCell();    
+    	cell.innerHTML = "wait...";
+    	cell.style.width = single_gauge_size+'px';
+    	cell.style.textAlign="right";
+    }
+    
+    
+    
     // initialize the chart
     function initData(){
         for(var field=1;field<=4;field++){
@@ -92,17 +120,36 @@
     }
     
     initData();
-    // display the data  
+    // display the data
+    function updated(tableid,cell,created_at){
+    	var cells=document.getElementById(tableid).rows[0].cells
+    	var recordDate=new Date(created_at);
+    	var today= new Date();
+    	if(( today.getDate()==recordDate.getDate())
+    		&&(today.getMonth()==recordDate.getMonth()))//print short date
+    		cells[cell].innerHTML=recordDate.hhmm();
+		else
+    		cells[cell].innerHTML=recordDate.yyyymmdd()+" "+recordDate.hhmm();//may some error see last update	
+    }
+    
     function displayDataInternal(data) {
-  	 if(data){
-  	 		if(data.field1)
+  	 if(data){  		
+  	 		if(data.field1){
   	 			dataTemper.setValue(0, 1, data.field1);
-  	 		if(data.field2)
+  	 			updated("temper_update_table",2,data.created_at);
+  	 		}
+  	 		if(data.field2){
   	 			dataHumm.setValue(0, 1, data.field2);
-  	 		if(data.field3)
+  	 			updated("humm_update_table",2,data.created_at);
+  	 		}
+  	 		if(data.field3){
   	 			dataTemper.setValue(1, 1, data.field3);
-  	 		if(data.field4)
+  	 			updated("temper_update_table",3,data.created_at);
+  	 		}
+  	 		if(data.field4){
   	 			dataHumm.setValue(1, 1, data.field4);
+  	 			updated("humm_update_table",3,data.created_at);
+  	 		}
   	 	}
       chart_temper.draw(dataTemper, optionsTemper);    
       chart_humm.draw(dataHumm, optionsHumm);    
@@ -110,16 +157,26 @@
 
     function displayDataExternal(data) {	    
   	 if(data){
-  	 		if(data.field1)
-  	 			dataBalcTemper.setValue(0, 1, data.field1);  	 		
-  	 		if(data.field3)
+  	 		if(data.field1){
+  	 			dataBalcTemper.setValue(0, 1, data.field1);
+  	 			updated("temper_update_table",4,data.created_at);
+  	 		}
+  	 		if(data.field3){
   	 			dataExtTemper.setValue(0, 1, data.field3);
-  	 		if(data.field4)
+  	 			updated("temper_update_table",0,data.created_at);
+  	 		}
+  	 		if(data.field4){
   	 			dataExtHumm.setValue(0, 1, data.field4);
-  	 		if(data.field5)
+  	 			updated("humm_update_table",0,data.created_at);
+  	 		}
+  	 		if(data.field5){
   	 			dataExtTemper.setValue(1, 1, data.field5);
-  	 		if(data.field6)
+  	 			updated("temper_update_table",1,data.created_at);
+  	 		}
+  	 		if(data.field6){
   	 			dataExtHumm.setValue(1, 1, data.field6);
+  	 			updated("humm_update_table",1,data.created_at);
+  	 		}
   	 	}
   	  chart_temper_balcon.draw(dataBalcTemper, optionsExtTemper);
   	  chart_temper_ext.draw(dataExtTemper, optionsExtTemper);
@@ -199,12 +256,12 @@
 		dataToday.addRow([hour,null,null]);
 	}
   	var fromDateStr=fromDate.yyyymmdd();
-	$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDateStr+'%2000:00:00'+'&api_key=' + weather_key, function(data) {
-	  for(var i=0;i<24;i++){
-		dataToday.setValue(i, 1, data.feeds[i].field3)
-		if(data.feeds[i+24])
-			dataToday.setValue(i, 2, data.feeds[i+24].field3)
-  	  }
+	$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDateStr+'%2000:00:00'+'&api_key=' + weather_key, function(reply) {
+		var dayToday=(new Date()).getDate();
+		reply.feeds.forEach(function(element) {
+			var recordDate=new Date(element.created_at);			
+			dataToday.setValue(recordDate.getHours(), (dayToday==recordDate.getDate())?2:1, element.field3)						
+		});				
 	  chartToday.draw(dataToday, options);
 	});
 	
