@@ -221,7 +221,7 @@
 	
 
         var options = {
-          title: 'Today',
+          title: 'Temperature',
           curveType: 'function',
           legend: { position: 'top' },
           vAxes: {
@@ -280,7 +280,7 @@
           data.addColumn('number', "Pressure");
                
           var classicOptions = {
-            title: 'Average Temperatures and Pressure',                        
+            title: 'Temperatures and Pressure',
             // Gives each series an axis that matches the vAxes number below.
             series: {
               0: {targetAxisIndex: 0},
@@ -344,7 +344,7 @@
 	     var dayCount=30;
 	     fromDate = new Date();
     	 fromDate.setDate(fromDate.getDate() -dayCount);
-    	 fromDate.setHours(0);
+    	 fromDate.setHours(9);
     	 fromDate.setMinutes(0);
     	 fromDate.setSeconds(0);
     	 fromDate.setMilliseconds(0);
@@ -352,13 +352,13 @@
 
           var data = new google.visualization.DataTable();
           data.addColumn('date', 'Month');
-          data.addColumn('number', "Max");
+          data.addColumn('number', "Max Day");
           data.addColumn({type: 'string', role: 'annotation'});
-          data.addColumn('number', "Min");	 
+          data.addColumn('number', "Min Night");	 
           data.addColumn({type: 'string', role: 'annotation'});
                
           var classicOptions = {
-            title: 'Min/Max Temperatures ['+fromDate.yyyymmdd()+'-> today]',
+            title: 'Day/Night Temperatures ['+fromDate.yyyymmdd()+'-> today]',
             colors: ['red', 'navy'],
             legend: { position: 'top' },
             vAxes: {
