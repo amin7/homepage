@@ -216,7 +216,7 @@
     	  var chartToday;
     	  var fromDate;
         dataToday =new google.visualization.arrayToDataTable([
-          [{label:'tomorrow' ,type: 'datetime'}, {label:'tomorrow' ,type: 'number'}, {label:'today' ,type: 'number'}],
+          [{label:'yesterday' ,type: 'datetime'}, {label:'yesterday' ,type: 'number'}, {label:'today' ,type: 'number'}],
         ]);
 	
 
