@@ -454,33 +454,19 @@
      	fromDate.setMinutes(0);
      	fromDate.setSeconds(0);
      	fromDate.setMilliseconds(0);
-   		for(var i=0;i<24*dayCount;i++){
-   			var hour=new Date(fromDate);
-   			hour.setHours(fromDate.getHours()+i);
-   			data.addRow([hour,null,null]);
- 		}
+//   		for(var i=0;i<24*dayCount;i++){
+//   			var hour=new Date(fromDate);
+//   			hour.setHours(fromDate.getHours()+i);
+//   			data.addRow([hour,null,null]);
+// 		}
  	    var classicChart = new google.visualization.LineChart(chartDiv);
- 	    classicChart.draw(data, classicOptions);
+ 	    //classicChart.draw(data, classicOptions);
 
- 		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=3&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) {
- 	
+ 		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/feed.json?timezone=Europe/Kiev&round=3&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) { 	
  			reply.feeds.forEach(function(element) {
- 				var recordDate=new Date(element.created_at);
- 				var foundRows = data.getFilteredRows([{column: 0, value: recordDate}]);
- 				if(foundRows.length){
- 					data.setValue(foundRows[0], 1, element.field3);
- 				}
+ 				var recordDate=new Date(element.created_at); 				
+ 				data.addRow([recordDate,Number(element.field3),Number(element.field4)]);
  			});
- 		  classicChart.draw(data, classicOptions);
- 		});
- 		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/fields/4.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) {
- 			reply.feeds.forEach(function(element) {
- 				var recordDate=new Date(element.created_at);
- 				var foundRows = data.getFilteredRows([{column: 0, value: recordDate}]);
- 				if(foundRows.length){
- 					data.setValue(foundRows[0], 2, element.field4);
- 				}
- 			});	
  		  classicChart.draw(data, classicOptions);
  		});
        }
