@@ -5,6 +5,9 @@
   var inHouse_id = 265846;  
   var inHouse_key = 'OUL94JOTKEXHAN33';
   
+  var inTermostat_id = 623918;  
+  var inTermostat_key = '3T4Y8WPUCTZICPZQ';
+  
   var single_gauge_size=160; 
   Date.prototype.yyyymmdd = function() {
 	  var mm = this.getMonth() + 1; // getMonth() is zero-based
@@ -37,19 +40,21 @@
 	  
 	  var optionsTemper,optionsHumm,optionsExtTemper,optionsExtHumm;
 	  
-	  //chart
+	  //charts
 	  var chart_temper,chart_humm;  
 	  var chart_temper_balcon;
 	  var chart_temper_ext,chart_humm_ext,chart_press_ext;
 	 dataTemper = google.visualization.arrayToDataTable([
        ['Label', 'Value'],
        ['parent', 0],
-       ['children', 0]         
+       ['children', 0],
+       ['kitchen', 0]
      ]);        
      dataHumm = google.visualization.arrayToDataTable([
          ['Label', 'Value'],
          ['parent', 0],
-         ['children', 0]         
+         ['children', 0],
+         ['kitchen', 0]
        ]);
      dataBalcTemper = google.visualization.arrayToDataTable([
          ['Label', 'Value'],         
@@ -71,39 +76,30 @@
     chart_temper = new google.visualization.Gauge(document.getElementById('temper_div'));
     chart_humm = new google.visualization.Gauge(document.getElementById('humm_div'));
 
-    optionsTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:35,greenFrom:17,greenTo:23, minorTicks: 5};
-    optionsHumm = {width: 2*single_gauge_size, height: single_gauge_size,min:0, max:100,greenFrom:40,greenTo:60, minorTicks: 5};
+    optionsTemper = {width: 3*single_gauge_size, height: single_gauge_size,min:0, max:35,greenFrom:17,greenTo:23, minorTicks: 5};
+    optionsHumm = {width: 3*single_gauge_size, height: single_gauge_size,min:0, max:100,greenFrom:40,greenTo:60, minorTicks: 5};
     
     optionsExtTemper = {width: 2*single_gauge_size, height: single_gauge_size,min:-40, max:40, minorTicks: 5};
     optionsExtHumm=Object.assign({}, optionsHumm);
-    //optionsExtHumm.width=single_gauge_size;
-    
+    optionsExtHumm.width= 2*single_gauge_size;    //
     
     chart_temper_balcon = new google.visualization.Gauge(document.getElementById('temper_balcon_div'));
     
     chart_temper_ext = new google.visualization.Gauge(document.getElementById('temper_ext_div'));
     chart_humm_ext = new google.visualization.Gauge(document.getElementById('humm_ext_div'));    
     
-    
-    var table = document.getElementById("temper_update_table");
-    var row = table.insertRow();
-    for(var n=0;n!=5;n++){
-    	var cell = row.insertCell();    
-    	cell.innerHTML = "wait...";
-    	cell.style.width = single_gauge_size+'px';
-    	cell.style.textAlign="right";
+    function fill_table_text(id,count){
+    	var table = document.getElementById(id);
+        var row = table.insertRow();
+        for(var n=0;n!=count;n++){
+        	var cell = row.insertCell();    
+        	cell.innerHTML = "-:-";
+        	cell.style.width = single_gauge_size+'px';
+        	cell.style.textAlign="right";
+        }
     }
-
-    var table = document.getElementById("humm_update_table");
-    var row = table.insertRow();
-    for(var n=0;n!=4;n++){
-    	var cell = row.insertCell();    
-    	cell.innerHTML = "wait...";
-    	cell.style.width = single_gauge_size+'px';
-    	cell.style.textAlign="right";
-    }
-    
-    
+    fill_table_text("temper_update_table",6);
+    fill_table_text("humm_update_table",5);
     
     // initialize the chart
     function initData(){
@@ -119,7 +115,7 @@
         }
     }
     
-    initData();
+    initData(); //request each field
     // display the data
     function updated(tableid,cell,created_at){
     	var cells=document.getElementById(tableid).rows[0].cells
@@ -159,7 +155,7 @@
   	 if(data){
   	 		if(data.field1){
   	 			dataBalcTemper.setValue(0, 1, data.field1);
-  	 			updated("temper_update_table",4,data.created_at);
+  	 			updated("temper_update_table",5,data.created_at);
   	 		}
   	 		if(data.field3){
   	 			dataExtTemper.setValue(0, 1, data.field3);
@@ -182,9 +178,20 @@
   	  chart_temper_ext.draw(dataExtTemper, optionsExtTemper);
   	  chart_humm_ext.draw(dataExtHumm, optionsExtHumm);  	  
   	}
-    
-    displayDataInternal();
-    displayDataExternal();
+    function displayDataTermostat(data){
+   	 if(data){  		
+	 		if(data.field1){
+	 			dataTemper.setValue(2, 1, data.field1);
+	 			updated("temper_update_table",4,data.created_at);
+	 		}
+	 		if(data.field2){
+	 			dataHumm.setValue(2, 1, data.field2);
+	 			updated("humm_update_table",4,data.created_at);
+	 		}	 		
+	 	}
+   chart_temper.draw(dataTemper, optionsTemper);    
+   chart_humm.draw(dataHumm, optionsHumm);    
+    }
     // load the data
     this.loadData= function() {    
       // get the data from thingspeak
@@ -192,10 +199,13 @@
       	displayDataInternal(data);      
       });
       $.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/feed/last.json?api_key=' + weather_key, function(data) {
-      	displayDataExternal(data);      
+      	displayDataExternal(data);
       });
+      $.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/feed/last.json?api_key=' + inTermostat_key, function(data) {
+        	displayDataTermostat(data);
+        });
     };
-    //this.loadData();
+    this.loadData();
     var obj=this;
     setInterval(obj.loadData(), 6000);
   }
@@ -209,6 +219,7 @@
 	  drawToday(); 
 	  drawext_temper_press();
 	  drawext_temper_30days();
+	  draw_termostat();
   } 
   // CHARts ------------------------------------------------------------
       function drawToday() {
@@ -407,3 +418,69 @@
 		  classicChart.draw(data, classicOptions);
 		});		
     }
+      
+      function draw_termostat() {
+ 	     var dayCount=7;     
+         var chartDiv = document.getElementById('ext_termostat');
+
+       var data = new google.visualization.DataTable();
+       data.addColumn('datetime', 'Month');
+       data.addColumn('number', "floor");
+       data.addColumn('number', "set");
+                
+       var classicOptions = {
+         title: 'termostat',
+         // Gives each series an axis that matches the vAxes number below.
+         series: {
+           0: {targetAxisIndex: 0},
+           1: {targetAxisIndex: 0}
+         },
+         vAxes: {
+           // Adds titles to each axis.
+           0: {title: 'Temps (Celsius)'}               
+         },
+         chartArea: {
+             backgroundColor: {
+               fill: '#FFFFFF',                  
+             },
+           },            
+         backgroundColor: {
+             fill: '#ddd',                
+         }            
+       };
+
+     	fromDate = new Date();
+     	fromDate.setDate(fromDate.getDate() -dayCount);
+     	fromDate.setMinutes(0);
+     	fromDate.setSeconds(0);
+     	fromDate.setMilliseconds(0);
+   		for(var i=0;i<24*dayCount;i++){
+   			var hour=new Date(fromDate);
+   			hour.setHours(fromDate.getHours()+i);
+   			data.addRow([hour,null,null]);
+ 		}
+ 	    var classicChart = new google.visualization.LineChart(chartDiv);
+ 	    classicChart.draw(data, classicOptions);
+
+ 		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/fields/3.json?average=60&timezone=Europe/Kiev&round=3&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) {
+ 	
+ 			reply.feeds.forEach(function(element) {
+ 				var recordDate=new Date(element.created_at);
+ 				var foundRows = data.getFilteredRows([{column: 0, value: recordDate}]);
+ 				if(foundRows.length){
+ 					data.setValue(foundRows[0], 1, element.field3);
+ 				}
+ 			});
+ 		  classicChart.draw(data, classicOptions);
+ 		});
+ 		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/fields/4.json?average=60&timezone=Europe/Kiev&round=1&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) {
+ 			reply.feeds.forEach(function(element) {
+ 				var recordDate=new Date(element.created_at);
+ 				var foundRows = data.getFilteredRows([{column: 0, value: recordDate}]);
+ 				if(foundRows.length){
+ 					data.setValue(foundRows[0], 2, element.field4);
+ 				}
+ 			});	
+ 		  classicChart.draw(data, classicOptions);
+ 		});
+       }
