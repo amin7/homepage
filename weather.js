@@ -396,9 +396,8 @@
 	    classicChart.draw(data, classicOptions);
 
 		$.getJSON('https://api.thingspeak.com/channels/' + weatherl_id + '/fields/3.json?timezone=Europe/Kiev&round=1&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + weather_key, function(reply) {
-	  		for(var i=0;i<=dayCount;i++){
-	  			var dayBeg=new Date(fromDate);
-	  			dayBeg.setDate(fromDate.getDate()+i);
+			for(let index=0;index<data.getNumberOfRows();index++){
+				var dayBeg=new Date(data.getValue(index,0));	  			
 	  			var dayEnd=new Date(dayBeg);
 	  			dayEnd.setDate(dayEnd.getDate()+1);
 	  			
@@ -409,12 +408,12 @@
 	  				}	  			
 	  			var dataDay=reply.feeds.filter(checkday).sort(function(a, b){return b.field3 - a.field3});
 	  			if(dataDay.length){//if present any elements
-	  				data.setValue(i,1,dataDay[0].field3);
-	  				data.setValue(i,2,dataDay[0].field3);
-	  			    data.setValue(i,3,dataDay[dataDay.length-1].field3);
-	  			    data.setValue(i,4,dataDay[dataDay.length-1].field3);	  			  
+	  				data.setValue(index,1,dataDay[0].field3);
+	  				data.setValue(index,2,dataDay[0].field3);
+	  			    data.setValue(index,3,dataDay[dataDay.length-1].field3);
+	  			    data.setValue(index,4,dataDay[dataDay.length-1].field3);	  			  
 	  			}
-	  			}
+			};
 		  classicChart.draw(data, classicOptions);
 		});		
     }
@@ -454,13 +453,7 @@
      	fromDate.setMinutes(0);
      	fromDate.setSeconds(0);
      	fromDate.setMilliseconds(0);
-//   		for(var i=0;i<24*dayCount;i++){
-//   			var hour=new Date(fromDate);
-//   			hour.setHours(fromDate.getHours()+i);
-//   			data.addRow([hour,null,null]);
-// 		}
  	    var classicChart = new google.visualization.LineChart(chartDiv);
- 	    //classicChart.draw(data, classicOptions);
 
  		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/feed.json?timezone=Europe/Kiev&round=3&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) { 	
  			reply.feeds.forEach(function(element) {
