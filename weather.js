@@ -306,7 +306,8 @@
                 backgroundColor: {
                   fill: '#FFFFFF',                  
                 },
-              },            
+              },    
+            curveType: 'function',
             backgroundColor: {
                 fill: '#ddd',                
             }            
@@ -381,6 +382,7 @@
                   fill: '#FFFFFF',                  
                 },
               },            
+            curveType: 'function',
             backgroundColor: {
                 fill: '#ddd',                
             }
@@ -424,6 +426,7 @@
 
        var data = new google.visualization.DataTable();
        data.addColumn('datetime', 'Month');
+       data.addColumn('number', "air");
        data.addColumn('number', "floor");
        data.addColumn('number', "set");
                 
@@ -432,7 +435,8 @@
          // Gives each series an axis that matches the vAxes number below.
          series: {
            0: {targetAxisIndex: 0},
-           1: {targetAxisIndex: 0}
+           1: {targetAxisIndex: 0},
+           2: {targetAxisIndex: 0}
          },
          vAxes: {
            // Adds titles to each axis.
@@ -445,7 +449,8 @@
            },            
          backgroundColor: {
              fill: '#ddd',                
-         }            
+         },         
+         explorer: {axis: 'horizontal'}
        };
 
      	fromDate = new Date();
@@ -458,7 +463,7 @@
  		$.getJSON('https://api.thingspeak.com/channels/' + inTermostat_id + '/feed.json?timezone=Europe/Kiev&round=3&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inTermostat_key, function(reply) { 	
  			reply.feeds.forEach(function(element) {
  				var recordDate=new Date(element.created_at); 				
- 				data.addRow([recordDate,Number(element.field3),Number(element.field4)]);
+ 				data.addRow([recordDate,Number(element.field1),Number(element.field3),Number(element.field4)]);
  			});
  		  classicChart.draw(data, classicOptions);
  		});
