@@ -220,6 +220,7 @@
 	  drawext_temper_press();
 	  drawext_temper_30days();
 	  draw_termostat();
+	  draw_term_rooms();
   } 
   // CHARts ------------------------------------------------------------
       function drawToday() {
@@ -468,3 +469,62 @@
  		  classicChart.draw(data, classicOptions);
  		});
        }
+      
+function draw_term_rooms() {
+    var dayCount=7;     
+    var chartDiv = document.getElementById('id_term_room');
+
+    var data = new google.visualization.DataTable();
+    data.addColumn('datetime', 'Month');
+    data.addColumn('number', "children");
+    data.addColumn('number', "parent");
+         
+var classicOptions = {
+  title: 'rooms',
+  // Gives each series an axis that matches the vAxes number below.
+  interpolateNulls:'true',
+  series: {
+    0: {targetAxisIndex: 0},
+    1: {targetAxisIndex: 0},
+    2: {targetAxisIndex: 0}
+  },
+  vAxes: {
+    // Adds titles to each axis.
+    0: {title: 'Temps (Celsius)'}               
+  },
+  chartArea: {
+      backgroundColor: {
+        fill: '#FFFFFF',                  
+      },
+    },            
+  backgroundColor: {
+      fill: '#ddd',                
+  },         
+  explorer: {axis: 'horizontal'}
+};
+
+fromDate = new Date();
+fromDate.setDate(fromDate.getDate() -dayCount);
+fromDate.setMinutes(0);
+fromDate.setSeconds(0);
+fromDate.setMilliseconds(0);
+var classicChart = new google.visualization.LineChart(chartDiv);
+
+$.getJSON('https://api.thingspeak.com/channels/' + inHouse_id + '/feed.json?timezone=Europe/Kiev&round=3&start='+fromDate.yyyymmdd()+'%2000:00:00'+'&api_key=' + inHouse_key, function(reply) {
+    
+    var field2=null;
+	reply.feeds.forEach(function(element) {
+		var recordDate=new Date(element.created_at);
+		var parent=null;
+		if(element.field1){
+		    parent=Number(element.field1);
+		}
+		var children=null;
+        if(element.field3){
+            children=Number(element.field3);
+        }
+		data.addRow([recordDate,children,parent]);
+	});
+  classicChart.draw(data, classicOptions);
+});
+}
